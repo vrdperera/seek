@@ -44,6 +44,7 @@ def save_checkpoint(
     *,
     image_size: int,
     training_mode: str,
+    objective: str,
     metrics: dict[str, float],
 ) -> None:
     destination = Path(path)
@@ -54,6 +55,7 @@ def save_checkpoint(
             "embedding_dim": model.embedding_dim,
             "image_size": image_size,
             "training_mode": training_mode,
+            "objective": objective,
             "metrics": metrics,
         },
         destination,

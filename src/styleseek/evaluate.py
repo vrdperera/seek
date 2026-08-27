@@ -28,7 +28,8 @@ def main() -> None:
     if args.checkpoint:
         model, payload = load_checkpoint(args.checkpoint, device)
         image_size = int(payload.get("image_size", args.image_size))
-        model_name = f"triplet-{payload.get('training_mode', 'unknown')}"
+        objective = payload.get("objective", "metric-learning")
+        model_name = f"{objective}-{payload.get('training_mode', 'unknown')}"
     else:
         model = FashionEncoder(embedding_dim=512, pretrained=True).to(device).eval()
         image_size = args.image_size
