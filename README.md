@@ -99,6 +99,17 @@ uv run python scripts/prepare_deepfashion2.py \
   --max-products 1000
 ```
 
+To grow an experiment without moving validation/test identities into training, use the
+existing manifest as a split reference and write the larger dataset separately:
+
+```bash
+uv run python scripts/prepare_deepfashion2.py \
+  --dataset-root data/raw/deepfashion2 \
+  --reference-manifest data/processed/retrieval/manifest.csv \
+  --output data/processed/retrieval_5k/manifest.csv \
+  --max-products 5000
+```
+
 ## 4. Evaluate the pretrained baseline
 
 ```bash
@@ -179,6 +190,18 @@ artifacts/indexes/catalogue.pt
 ```
 
 Its online flow is: upload, detect garments, select a garment, crop, embed, rank catalogue products, and display the top matches.
+
+Catalogue indexes built from manifests containing a `category` column automatically
+restrict retrieval to the selected detector category. If category metadata or matching
+candidates are unavailable, the application falls back to the complete catalogue.
+
+To upgrade an older DeepFashion2 manifest that predates category metadata:
+
+```bash
+uv run python scripts/add_manifest_categories.py \
+  --dataset-root data/raw/deepfashion2 \
+  --manifest data/processed/retrieval_5k/manifest.csv
+```
 
 ## 9. Benchmark latency
 

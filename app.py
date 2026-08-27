@@ -23,6 +23,7 @@ from styleseek.paths import (
     SAMPLE_DATA_DIR,
 )
 from styleseek.utils import choose_device
+from styleseek.retrieval import rank_catalogue
 
 
 def parse_args() -> argparse.Namespace:
@@ -51,6 +52,7 @@ def create_demo(
     embeddings = catalogue["embeddings"].float()
     paths = catalogue["paths"]
     product_ids = catalogue["product_ids"]
+    categories = catalogue.get("categories") or None
     transform = build_transform(False, int(payload.get("image_size", 224)))
     detector = None
     if detector_path and Path(detector_path).exists():
@@ -119,19 +121,36 @@ def create_demo(
         tensor = transform(garment).unsqueeze(0).to(device)
         with torch.inference_mode():
             query = model(tensor).cpu().float()
-        scores = (query @ embeddings.T).squeeze(0)
-        count = min(top_k, len(paths))
-        values, indices = torch.topk(scores, k=count)
+        category = detection.category if detection else None
+        values, indices, category_filtered = rank_catalogue(
+            query,
+            embeddings,
+            top_k,
+            categories,
+            category,
+        )
+        count = len(indices)
         results = []
-        for score, index in zip(values.tolist(), indices.tolist()):
-            caption = f"Product {product_ids[index]} · similarity {score:.3f}"
+        for rank, (score, index) in enumerate(
+            zip(values.tolist(), indices.tolist()), start=1
+        ):
+            item_category = categories[index] if categories else "category unavailable"
+            caption = (
+                f"Rank {rank} · Product {product_ids[index]} · {item_category} · "
+                f"similarity {score:.3f}"
+            )
             results.append((paths[index], caption))
         latency_ms = (time.perf_counter() - started) * 1000
-        category = detection.category if detection else "full image"
+        category = category or "full image"
+        filter_status = (
+            f"Filtered catalogue to '{category}'."
+            if category_filtered
+            else "Category filter unavailable; searched the full catalogue."
+        )
         return (
             garment,
             results,
-            f"Searched using '{category}'. Retrieved {count} products in {latency_ms:.1f} ms on {device}.",
+            f"{filter_status} Retrieved {count} products in {latency_ms:.1f} ms on {device}.",
         )
 
     example_paths = [

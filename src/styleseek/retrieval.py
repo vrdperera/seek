@@ -8,6 +8,34 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 
+def rank_catalogue(
+    query_embedding: torch.Tensor,
+    catalogue_embeddings: torch.Tensor,
+    top_k: int,
+    catalogue_categories: Iterable[str] | None = None,
+    query_category: str | None = None,
+) -> tuple[torch.Tensor, torch.Tensor, bool]:
+    """Rank catalogue embeddings, restricting candidates by category when possible."""
+    scores = (query_embedding.float() @ catalogue_embeddings.float().T).squeeze(0)
+    candidate_indices = torch.arange(len(catalogue_embeddings))
+    category_filter_applied = False
+
+    if catalogue_categories is not None and query_category:
+        categories = list(catalogue_categories)
+        if len(categories) == len(catalogue_embeddings):
+            mask = torch.tensor(
+                [category == query_category for category in categories], dtype=torch.bool
+            )
+            if mask.any():
+                candidate_indices = candidate_indices[mask]
+                scores = scores[mask]
+                category_filter_applied = True
+
+    count = min(top_k, len(candidate_indices))
+    values, local_indices = torch.topk(scores, k=count)
+    return values, candidate_indices[local_indices], category_filter_applied
+
+
 @torch.inference_mode()
 def embed_loader(model, loader: DataLoader, device: torch.device, description: str):
     embeddings: list[torch.Tensor] = []

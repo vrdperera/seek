@@ -41,6 +41,11 @@ def main() -> None:
     embeddings, product_ids, paths = embed_loader(
         model, loader, device, "Indexing catalogue"
     )
+    categories = (
+        dataset.frame["category"].astype(str).tolist()
+        if "category" in dataset.frame.columns
+        else []
+    )
     destination = Path(args.output)
     destination.parent.mkdir(parents=True, exist_ok=True)
     torch.save(
@@ -48,6 +53,7 @@ def main() -> None:
             "embeddings": embeddings,
             "product_ids": product_ids,
             "paths": paths,
+            "categories": categories,
             "checkpoint": str(Path(args.checkpoint).resolve()),
             "image_size": image_size,
         },
