@@ -117,6 +117,50 @@ class TripletFashionDataset(Dataset):
         return anchor, positive, negative, product_id
 
 
+class PairedFashionDataset(Dataset):
+    """Samples matched consumer and shop images for in-batch contrastive learning."""
+
+    def __init__(
+        self,
+        manifest_path: str | Path,
+        split: str = "train",
+        image_size: int = 224,
+        train_augmentation: bool = True,
+    ) -> None:
+        self.manifest_path = Path(manifest_path)
+        frame = load_manifest(manifest_path)
+        frame = frame[frame["split"] == split].copy()
+
+        consumers: dict[str, list[str]] = defaultdict(list)
+        shops: dict[str, list[str]] = defaultdict(list)
+        for row in frame.itertuples(index=False):
+            target = consumers if row.domain == "consumer" else shops
+            target[str(row.product_id)].append(row.image_path)
+
+        self.product_ids = sorted(set(consumers) & set(shops))
+        if len(self.product_ids) < 2:
+            raise ValueError(
+                f"Split '{split}' needs at least two product IDs with both consumer and shop images"
+            )
+        self.shops = shops
+        self.samples = [
+            (product_id, path)
+            for product_id in self.product_ids
+            for path in consumers[product_id]
+        ]
+        self.transform = build_transform(train_augmentation, image_size)
+
+    def __len__(self) -> int:
+        return len(self.samples)
+
+    def __getitem__(self, index: int):
+        product_id, query_rel = self.samples[index]
+        product_rel = random.choice(self.shops[product_id])
+        query = self.transform(_read_rgb(resolve_image_path(self.manifest_path, query_rel)))
+        product = self.transform(_read_rgb(resolve_image_path(self.manifest_path, product_rel)))
+        return query, product, product_id
+
+
 class ImageManifestDataset(Dataset):
     def __init__(
         self,

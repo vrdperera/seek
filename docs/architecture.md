@@ -7,7 +7,7 @@
 3. `train_detector` fine-tunes YOLO and records the run under `artifacts/runs/detector/`.
 4. The best detector checkpoint is promoted to `artifacts/checkpoints/detector/best.pt`.
 5. `prepare_deepfashion2.py` creates paired crops and a manifest under `data/processed/retrieval/`.
-6. `train` fine-tunes the shared ResNet18 encoder and saves `artifacts/checkpoints/retrieval/best.pt`.
+6. `train` fine-tunes the shared ResNet18 encoder with symmetric InfoNCE and in-batch negatives, then saves `artifacts/checkpoints/retrieval/best.pt`.
 7. `index` embeds shop images and writes `artifacts/indexes/catalogue.pt`.
 
 ## Online workflow

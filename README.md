@@ -1,6 +1,6 @@
 # StyleSeek AI
 
-StyleSeek AI is a consumer-to-shop fashion retrieval system. A YOLO detector locates garments in a full-person photograph, and a triplet-trained ResNet18 encoder retrieves matching shop products from a precomputed catalogue index.
+StyleSeek AI is a consumer-to-shop fashion retrieval system. A YOLO detector locates garments in a full-person photograph, and a contrastively trained ResNet18 encoder retrieves matching shop products from a precomputed catalogue index.
 
 ## Repository layout
 
@@ -109,12 +109,20 @@ uv run python -m styleseek.evaluate \
 
 ## 5. Train retrieval experiments
 
+The default objective is symmetric InfoNCE: a batch contains matched consumer/catalogue
+pairs, and all non-matching products in the batch act as negatives. Duplicate product IDs
+are treated as additional positives instead of false negatives. Use larger batches when
+memory permits because they provide more in-batch negatives. The previous triplet
+objective remains available with `--loss triplet` for comparison.
+
 Frozen-backbone experiment:
 
 ```bash
 uv run python -m styleseek.train \
   --manifest data/processed/retrieval/manifest.csv \
   --mode frozen \
+  --loss contrastive \
+  --temperature 0.07 \
   --epochs 8 \
   --batch-size 16 \
   --output artifacts/checkpoints/retrieval/frozen.pt
@@ -126,6 +134,8 @@ Partial fine-tuning experiment:
 uv run python -m styleseek.train \
   --manifest data/processed/retrieval/manifest.csv \
   --mode layer4 \
+  --loss contrastive \
+  --temperature 0.07 \
   --epochs 5 \
   --batch-size 8 \
   --output artifacts/checkpoints/retrieval/best.pt

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "styleseek-ai"
 version = "0.1.0"
-description = "Siamese fashion product retrieval with triplet-loss training"
+description = "Fashion product retrieval with contrastive metric learning"
 requires-python = ">=3.10"
 dependencies = [
   "torch>=2.2",
