@@ -12,3 +12,4 @@ artifacts/*
 !artifacts/README.md
 reports/metrics/
 reports/figures/
+/yolo*.pt
