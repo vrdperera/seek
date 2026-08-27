@@ -43,14 +43,14 @@ No manual virtual-environment activation is required.
 
 ## Existing raw data
 
-The current workspace contains two preserved DeepFashion2 copies:
+The current workspace contains the official extracted dataset and a preserved mirror:
 
 ```text
 data/raw/deepfashion2/
 data/raw/deepfashion2_mirror/
 ```
 
-Use one source consistently. The commands below use the Kaggle mirror.
+Use one source consistently. The commands below use the official extracted dataset at `data/raw/deepfashion2/`.
 
 ## 1. Prepare detector data
 
@@ -58,7 +58,7 @@ This converts full consumer photographs and DeepFashion2 bounding boxes into YOL
 
 ```bash
 uv run python scripts/prepare_deepfashion2_detection.py \
-  --dataset-root data/raw/deepfashion2_mirror \
+  --dataset-root data/raw/deepfashion2 \
   --output data/interim/detection \
   --max-train-images 5000 \
   --max-val-images 1000
@@ -94,7 +94,7 @@ This matches consumer and shop items using `pair_id + style`, crops their annota
 
 ```bash
 uv run python scripts/prepare_deepfashion2.py \
-  --dataset-root data/raw/deepfashion2_mirror \
+  --dataset-root data/raw/deepfashion2 \
   --output data/processed/retrieval/manifest.csv \
   --max-products 1000
 ```
