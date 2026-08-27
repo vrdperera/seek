@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "styleseek-ai"
+version = "0.1.0"
+description = "Siamese fashion product retrieval with triplet-loss training"
+requires-python = ">=3.10"
+dependencies = [
+  "torch>=2.2",
+  "torchvision>=0.17",
+  "numpy>=1.26",
+  "pandas>=2.1",
+  "Pillow>=10.0",
+  "tqdm>=4.66",
+  "gradio>=4.0",
+  "matplotlib>=3.8",
+  "ultralytics>=8.4.123",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]

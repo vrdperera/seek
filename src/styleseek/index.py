@@ -1,0 +1,60 @@
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+
+import torch
+from torch.utils.data import DataLoader
+
+from .data import ImageManifestDataset
+from .model import load_checkpoint
+from .paths import CATALOGUE_INDEX, DEFAULT_MANIFEST, RETRIEVAL_CHECKPOINT
+from .retrieval import embed_loader
+from .utils import choose_device
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Build a catalogue embedding index")
+    parser.add_argument("--manifest", default=str(DEFAULT_MANIFEST))
+    parser.add_argument("--checkpoint", default=str(RETRIEVAL_CHECKPOINT))
+    parser.add_argument("--output", default=str(CATALOGUE_INDEX))
+    parser.add_argument("--split", default="test")
+    parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument("--workers", type=int, default=0)
+    parser.add_argument("--device", default="auto")
+    return parser.parse_args()
+
+
+def main() -> None:
+    args = parse_args()
+    device = choose_device(args.device)
+    model, payload = load_checkpoint(args.checkpoint, device)
+    image_size = int(payload.get("image_size", 224))
+    dataset = ImageManifestDataset(args.manifest, args.split, "shop", image_size)
+    loader = DataLoader(
+        dataset,
+        batch_size=args.batch_size,
+        shuffle=False,
+        num_workers=args.workers,
+        pin_memory=device.type == "cuda",
+    )
+    embeddings, product_ids, paths = embed_loader(
+        model, loader, device, "Indexing catalogue"
+    )
+    destination = Path(args.output)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    torch.save(
+        {
+            "embeddings": embeddings,
+            "product_ids": product_ids,
+            "paths": paths,
+            "checkpoint": str(Path(args.checkpoint).resolve()),
+            "image_size": image_size,
+        },
+        destination,
+    )
+    print(f"Saved {len(paths)} catalogue embeddings to {destination}")
+
+
+if __name__ == "__main__":
+    main()

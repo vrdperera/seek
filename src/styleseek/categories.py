@@ -1,0 +1,15 @@
+GARMENT_CATEGORIES = [
+    "short sleeve top",
+    "long sleeve top",
+    "short sleeve outerwear",
+    "long sleeve outerwear",
+    "vest",
+    "sling",
+    "shorts",
+    "trousers",
+    "skirt",
+    "short sleeve dress",
+    "long sleeve dress",
+    "vest dress",
+    "sling dress",
+]
