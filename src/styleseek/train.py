@@ -114,6 +114,7 @@ def main() -> None:
                 args.output,
                 image_size=args.image_size,
                 training_mode=args.mode,
+                objective=args.loss,
                 metrics=metrics,
             )
 
