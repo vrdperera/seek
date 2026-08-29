@@ -13,3 +13,4 @@ artifacts/*
 reports/metrics/
 reports/figures/
 /yolo*.pt
+tmp
