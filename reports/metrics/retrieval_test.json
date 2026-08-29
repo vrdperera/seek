@@ -1,0 +1,10 @@
+{
+  "model": "contrastive-layer4",
+  "split": "test",
+  "device": "mps",
+  "recall@1": 0.5351851851851852,
+  "recall@5": 0.7055555555555556,
+  "recall@10": 0.8055555555555556,
+  "map": 0.42224718625768076,
+  "queries": 540.0
+}

@@ -1,0 +1,10 @@
+{
+  "model": "contrastive-frozen",
+  "split": "test",
+  "device": "mps",
+  "recall@1": 0.3351851851851852,
+  "recall@5": 0.5888888888888889,
+  "recall@10": 0.7074074074074074,
+  "map": 0.2868087219819409,
+  "queries": 540.0
+}

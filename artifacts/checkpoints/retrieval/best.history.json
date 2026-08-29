@@ -1,0 +1,65 @@
+{
+  "configuration": {
+    "manifest": "data/processed/retrieval/manifest.csv",
+    "output": "artifacts/checkpoints/retrieval/best.pt",
+    "mode": "layer4",
+    "epochs": 5,
+    "batch_size": 16,
+    "embedding_dim": 256,
+    "image_size": 224,
+    "learning_rate": 0.0001,
+    "loss": "contrastive",
+    "temperature": 0.07,
+    "margin": 0.3,
+    "workers": 0,
+    "seed": 42,
+    "device": "mps"
+  },
+  "epochs": [
+    {
+      "epoch": 1.0,
+      "loss": 1.2163564978112593,
+      "recall@1": 0.40034364261168387,
+      "recall@5": 0.5893470790378007,
+      "recall@10": 0.6769759450171822,
+      "map": 0.31569939946917086,
+      "queries": 582.0
+    },
+    {
+      "epoch": 2.0,
+      "loss": 0.6650366954286159,
+      "recall@1": 0.44329896907216493,
+      "recall@5": 0.6305841924398625,
+      "recall@10": 0.7096219931271478,
+      "map": 0.3439556950508752,
+      "queries": 582.0
+    },
+    {
+      "epoch": 3.0,
+      "loss": 0.489832243023467,
+      "recall@1": 0.4587628865979381,
+      "recall@5": 0.6254295532646048,
+      "recall@10": 0.7096219931271478,
+      "map": 0.34378201829535515,
+      "queries": 582.0
+    },
+    {
+      "epoch": 4.0,
+      "loss": 0.37988358674842476,
+      "recall@1": 0.4570446735395189,
+      "recall@5": 0.6374570446735395,
+      "recall@10": 0.7336769759450171,
+      "map": 0.3476014359917367,
+      "queries": 582.0
+    },
+    {
+      "epoch": 5.0,
+      "loss": 0.304388932804695,
+      "recall@1": 0.44329896907216493,
+      "recall@5": 0.6219931271477663,
+      "recall@10": 0.7233676975945017,
+      "map": 0.3379152758593999,
+      "queries": 582.0
+    }
+  ]
+}

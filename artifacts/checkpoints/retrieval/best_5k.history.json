@@ -1,0 +1,65 @@
+{
+  "configuration": {
+    "manifest": "data/processed/retrieval_5k/manifest.csv",
+    "output": "artifacts/checkpoints/retrieval/best_5k.pt",
+    "mode": "layer4",
+    "epochs": 5,
+    "batch_size": 16,
+    "embedding_dim": 256,
+    "image_size": 224,
+    "learning_rate": 0.0001,
+    "loss": "contrastive",
+    "temperature": 0.07,
+    "margin": 0.3,
+    "workers": 0,
+    "seed": 42,
+    "device": "mps"
+  },
+  "epochs": [
+    {
+      "epoch": 1.0,
+      "loss": 0.9638451835242012,
+      "recall@1": 0.5292096219931272,
+      "recall@5": 0.7044673539518901,
+      "recall@10": 0.7852233676975945,
+      "map": 0.4361198229628613,
+      "queries": 582.0
+    },
+    {
+      "epoch": 2.0,
+      "loss": 0.6861427509788495,
+      "recall@1": 0.5756013745704467,
+      "recall@5": 0.738831615120275,
+      "recall@10": 0.8178694158075601,
+      "map": 0.4609712128206499,
+      "queries": 582.0
+    },
+    {
+      "epoch": 3.0,
+      "loss": 0.5504223212936655,
+      "recall@1": 0.6099656357388317,
+      "recall@5": 0.7525773195876289,
+      "recall@10": 0.8367697594501718,
+      "map": 0.482820894443559,
+      "queries": 582.0
+    },
+    {
+      "epoch": 4.0,
+      "loss": 0.47920573651063036,
+      "recall@1": 0.5979381443298969,
+      "recall@5": 0.7525773195876289,
+      "recall@10": 0.8230240549828178,
+      "map": 0.4655850821563903,
+      "queries": 582.0
+    },
+    {
+      "epoch": 5.0,
+      "loss": 0.42593908381429196,
+      "recall@1": 0.6151202749140894,
+      "recall@5": 0.7800687285223368,
+      "recall@10": 0.8573883161512027,
+      "map": 0.4885533041238368,
+      "queries": 582.0
+    }
+  ]
+}

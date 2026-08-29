@@ -8,6 +8,7 @@ import gradio as gr
 import torch
 from PIL import Image
 
+from styleseek.catalogue import require_catalogue_images, resolve_catalogue_paths
 from styleseek.data import build_transform
 from styleseek.detector import (
     GarmentDetection,
@@ -56,7 +57,10 @@ def create_demo(
     model, payload = load_checkpoint(checkpoint_path, device)
     catalogue = torch.load(catalogue_path, map_location="cpu", weights_only=False)
     embeddings = catalogue["embeddings"].float()
-    paths = catalogue["paths"]
+    paths = resolve_catalogue_paths(
+        catalogue["paths"], catalogue.get("path_base")
+    )
+    require_catalogue_images(paths)
     product_ids = catalogue["product_ids"]
     categories = catalogue.get("categories") or None
     transform = build_transform(False, int(payload.get("image_size", 224)))

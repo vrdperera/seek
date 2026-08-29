@@ -28,7 +28,51 @@ seek/
     └── figures/                   # Plots and qualitative results
 ```
 
-Raw and generated data, checkpoints, indexes, and reports are excluded from Git. Their creation is reproducible from the tracked source and scripts.
+Raw and generated data, large checkpoints, catalogue indexes and generated figures are
+excluded from Git. Lightweight metrics, training histories and detector result summaries are
+tracked as experimental evidence; all generated assets remain reproducible from the source
+and scripts.
+
+## Supervisor quick start
+
+The source repository keeps large runtime binaries outside Git. A versioned GitHub
+Release supplies the trained checkpoints and a small generated catalogue whose paths are
+portable across computers.
+
+```bash
+git clone https://github.com/vrdperera/seek.git
+cd seek
+uv sync --locked
+uv run python scripts/download_demo.py
+uv run pytest
+uv run python app.py
+```
+
+The release catalogue is generated specifically for portable software demonstration. It
+does not replace the identity-disjoint DeepFashion2 test catalogue used to calculate the
+reported retrieval metrics. The small metric JSON files and training histories are kept
+in Git so the reported evidence remains inspectable without downloading the dataset.
+
+### Create the GitHub Release bundle
+
+Run this command from the trained project workspace:
+
+```bash
+uv run python scripts/package_demo_release.py
+```
+
+It creates both files below:
+
+```text
+dist/styleseek-demo-v1.zip
+dist/styleseek-demo-v1.zip.sha256
+```
+
+Create a GitHub Release tagged `v1.0-demo`, then upload both files. The downloader verifies
+the SHA-256 checksum before extracting the artifacts. Each release bundle contains the
+trained retrieval checkpoint, garment detector, COCO person-detector weights, portable
+catalogue index and generated catalogue images. Do not add the raw DeepFashion2 archives
+to the release.
 
 ## Environment
 

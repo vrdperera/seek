@@ -1,0 +1,10 @@
+{
+  "model": "imagenet-resnet18-baseline",
+  "split": "test",
+  "device": "mps",
+  "recall@1": 0.3351851851851852,
+  "recall@5": 0.55,
+  "recall@10": 0.6351851851851852,
+  "map": 0.2440383818444395,
+  "queries": 540.0
+}
