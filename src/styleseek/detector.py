@@ -38,6 +38,50 @@ class GarmentDetection:
         )
 
 
+@dataclass(frozen=True)
+class PersonDetection:
+    box: tuple[int, int, int, int]
+    confidence: float
+
+
+class PersonDetector:
+    """COCO-pretrained person gate used before the fashion detector."""
+
+    def __init__(self, weights: str | Path, device: str = "cpu") -> None:
+        self.weights = Path(weights)
+        if not self.weights.exists():
+            raise FileNotFoundError(f"Person detector weights not found: {self.weights}")
+        self.model = YOLO(str(self.weights))
+        self.device = device
+
+    def detect(
+        self,
+        image: Image.Image,
+        confidence: float = 0.35,
+        max_detections: int = 5,
+    ) -> list[PersonDetection]:
+        result = self.model.predict(
+            source=image.convert("RGB"),
+            conf=confidence,
+            classes=[0],
+            max_det=max_detections,
+            device=self.device,
+            verbose=False,
+        )[0]
+        detections: list[PersonDetection] = []
+        if result.boxes is None:
+            return detections
+        for box in result.boxes:
+            x1, y1, x2, y2 = (int(round(value)) for value in box.xyxy[0].tolist())
+            detections.append(
+                PersonDetection(
+                    box=(x1, y1, x2, y2),
+                    confidence=float(box.conf[0].item()),
+                )
+            )
+        return sorted(detections, key=lambda item: item.confidence, reverse=True)
+
+
 class GarmentDetector:
     def __init__(self, weights: str | Path, device: str = "cpu") -> None:
         self.weights = Path(weights)

@@ -12,6 +12,7 @@ from styleseek.data import build_transform
 from styleseek.detector import (
     GarmentDetection,
     GarmentDetector,
+    PersonDetector,
     crop_detection,
     draw_detections,
 )
@@ -33,6 +34,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--catalogue", default=str(CATALOGUE_INDEX))
     parser.add_argument("--detector", default=str(DETECTOR_CHECKPOINT))
     parser.add_argument("--detection-confidence", type=float, default=0.30)
+    parser.add_argument("--person-detector", default="yolo11n.pt")
+    parser.add_argument("--person-confidence", type=float, default=0.35)
     parser.add_argument("--top-k", type=int, default=5)
     parser.add_argument("--device", default="auto")
     parser.add_argument("--share", action="store_true")
@@ -46,6 +49,8 @@ def create_demo(
     device_name: str,
     detector_path: str | None = None,
     detection_confidence: float = 0.30,
+    person_detector_path: str | None = "yolo11n.pt",
+    person_confidence: float = 0.35,
 ):
     device = choose_device(device_name)
     model, payload = load_checkpoint(checkpoint_path, device)
@@ -58,6 +63,9 @@ def create_demo(
     detector = None
     if detector_path and Path(detector_path).exists():
         detector = GarmentDetector(detector_path, device=str(device))
+    person_detector = None
+    if person_detector_path and Path(person_detector_path).exists():
+        person_detector = PersonDetector(person_detector_path, device=str(device))
 
     def choice_label(index: int, detection: GarmentDetection) -> str:
         return f"{index + 1} · {detection.category} · {detection.confidence:.0%}"
@@ -75,7 +83,19 @@ def create_demo(
                 gr.Button(interactive=False),
             )
         started = time.perf_counter()
-        if detector is None:
+        if person_detector is None:
+            detections = []
+            message = (
+                "Person validation unavailable: install the COCO-pretrained yolo11n.pt "
+                "weights before searching."
+            )
+        elif not person_detector.detect(image, confidence=person_confidence):
+            detections = []
+            message = (
+                "No person detected. Upload a full-person photograph containing clearly "
+                f"visible clothing (person confidence threshold: {person_confidence:.0%})."
+            )
+        elif detector is None:
             detections = []
             message = (
                 "Garment detector unavailable: install best.pt under "
@@ -170,7 +190,8 @@ def create_demo(
 
     example_paths = [
         str(path)
-        for path in (SAMPLE_DATA_DIR / "images").glob("*_consumer_*.jpg")
+        for path in (SAMPLE_DATA_DIR / "full_person").glob("*")
+        if path.suffix.lower() in {".jpg", ".jpeg", ".png", ".webp"}
     ][:4]
     with gr.Blocks(title="StyleSeek AI") as demo:
         gr.Markdown(
@@ -229,12 +250,14 @@ def create_demo(
 def main() -> None:
     args = parse_args()
     demo = create_demo(
-        args.checkpoint,
-        args.catalogue,
-        args.top_k,
-        args.device,
-        args.detector,
-        args.detection_confidence,
+        checkpoint_path=args.checkpoint,
+        catalogue_path=args.catalogue,
+        top_k=args.top_k,
+        device_name=args.device,
+        detector_path=args.detector,
+        detection_confidence=args.detection_confidence,
+        person_detector_path=args.person_detector,
+        person_confidence=args.person_confidence,
     )
     demo.launch(share=args.share)
 

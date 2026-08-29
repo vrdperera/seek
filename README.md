@@ -1,6 +1,6 @@
 # StyleSeek AI
 
-StyleSeek AI is a consumer-to-shop fashion retrieval system. A YOLO detector locates garments in a full-person photograph, and a contrastively trained ResNet18 encoder retrieves matching shop products from a precomputed catalogue index.
+StyleSeek AI is a consumer-to-shop fashion retrieval system. A COCO-pretrained person gate first rejects inputs without a visible person, a fine-tuned YOLO detector then locates garments, and a contrastively trained ResNet18 encoder retrieves matching shop products from a precomputed catalogue index.
 
 ## Repository layout
 
