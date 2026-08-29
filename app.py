@@ -24,6 +24,7 @@ from styleseek.paths import (
 )
 from styleseek.utils import choose_device
 from styleseek.retrieval import rank_catalogue
+from styleseek.ui_state import retrieval_block_reason
 
 
 def parse_args() -> argparse.Namespace:
@@ -61,39 +62,51 @@ def create_demo(
     def choice_label(index: int, detection: GarmentDetection) -> str:
         return f"{index + 1} · {detection.category} · {detection.confidence:.0%}"
 
-    def full_image_detection(image: Image.Image) -> GarmentDetection:
-        return GarmentDetection(
-            box=(0, 0, image.width, image.height),
-            class_id=-1,
-            category="full image (detector unavailable)",
-            confidence=1.0,
-        )
-
     def detect_garments(image: Image.Image):
         if image is None:
-            return None, gr.Dropdown(choices=[], value=None), [], "Upload a photograph first."
+            return (
+                None,
+                gr.Dropdown(choices=[], value=None, interactive=False),
+                [],
+                "Upload a photograph first.",
+                None,
+                [],
+                "Retrieval is unavailable until a garment is detected.",
+                gr.Button(interactive=False),
+            )
         started = time.perf_counter()
         if detector is None:
-            detections = [full_image_detection(image)]
+            detections = []
             message = (
-                "Detector weights are not installed yet. Retrieval will use the full image; "
-                "train the detector and install best.pt under artifacts/checkpoints/detector/."
+                "Garment detector unavailable: install best.pt under "
+                "artifacts/checkpoints/detector/ before searching."
             )
         else:
             detections = detector.detect(image, confidence=detection_confidence)
             if not detections:
-                detections = [full_image_detection(image)]
-                message = "No garment exceeded the confidence threshold; using the full image."
+                message = (
+                    "No garment detected. Upload a photograph containing clearly visible clothing "
+                    f"(confidence threshold: {detection_confidence:.0%})."
+                )
             else:
                 elapsed = (time.perf_counter() - started) * 1000
                 message = f"Detected {len(detections)} garment(s) in {elapsed:.1f} ms. Select one below."
         choices = [choice_label(index, item) for index, item in enumerate(detections)]
         annotated = draw_detections(image, detections)
+        can_retrieve = bool(detections)
         return (
             annotated,
-            gr.Dropdown(choices=choices, value=choices[0]),
+            gr.Dropdown(
+                choices=choices,
+                value=choices[0] if choices else None,
+                interactive=can_retrieve,
+            ),
             [item.to_dict() for item in detections],
             message,
+            None,
+            [],
+            "" if can_retrieve else "Retrieval blocked because no garment was detected.",
+            gr.Button(interactive=can_retrieve),
         )
 
     def selected_detection(selection: str | None, detection_values: list[dict]):
@@ -110,18 +123,21 @@ def create_demo(
         if image is None:
             return None
         detection = selected_detection(selection, detection_values)
-        return crop_detection(image, detection) if detection else image
+        return crop_detection(image, detection) if detection else None
 
     def retrieve(image: Image.Image, selection: str, detection_values: list[dict]):
-        if image is None:
-            return None, [], "Upload an image to start."
+        block_reason = retrieval_block_reason(image is not None, detection_values)
+        if block_reason:
+            return None, [], block_reason
         started = time.perf_counter()
         detection = selected_detection(selection, detection_values)
-        garment = crop_detection(image, detection) if detection else image.convert("RGB")
+        if detection is None:
+            return None, [], "Retrieval blocked: select a detected garment first."
+        garment = crop_detection(image, detection)
         tensor = transform(garment).unsqueeze(0).to(device)
         with torch.inference_mode():
             query = model(tensor).cpu().float()
-        category = detection.category if detection else None
+        category = detection.category
         values, indices, category_filtered = rank_catalogue(
             query,
             embeddings,
@@ -141,7 +157,6 @@ def create_demo(
             )
             results.append((paths[index], caption))
         latency_ms = (time.perf_counter() - started) * 1000
-        category = category or "full image"
         filter_status = (
             f"Filtered catalogue to '{category}'."
             if category_filtered
@@ -170,9 +185,13 @@ def create_demo(
                 detect_button = gr.Button("1. Detect garments", variant="primary")
             with gr.Column():
                 annotated = gr.Image(type="pil", label="Detected garments", interactive=False)
-                garment_choice = gr.Dropdown(label="2. Select a garment", choices=[])
+                garment_choice = gr.Dropdown(
+                    label="2. Select a garment", choices=[], interactive=False
+                )
                 detection_status = gr.Textbox(label="Detection details", interactive=False)
-                retrieve_button = gr.Button("3. Find matching products", variant="primary")
+                retrieve_button = gr.Button(
+                    "3. Find matching products", variant="primary", interactive=False
+                )
         with gr.Row():
             selected_crop = gr.Image(type="pil", label="Garment used for search", interactive=False)
             gallery = gr.Gallery(label="Matching catalogue garments", columns=5, height="auto")
@@ -183,7 +202,16 @@ def create_demo(
         detect_button.click(
             fn=detect_garments,
             inputs=upload,
-            outputs=[annotated, garment_choice, detection_state, detection_status],
+            outputs=[
+                annotated,
+                garment_choice,
+                detection_state,
+                detection_status,
+                selected_crop,
+                gallery,
+                retrieval_status,
+                retrieve_button,
+            ],
         )
         garment_choice.change(
             fn=preview_crop,
